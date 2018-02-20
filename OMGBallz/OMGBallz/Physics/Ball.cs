@@ -19,31 +19,31 @@ public class Ball : PhysicsObject
         Acceleration = acceleration;
         Mass = mass;
 
-        Collisions = new List<PhysicsObject>();
+        //Collisions = new List<PhysicsObject>();
     }
 
-    public override double Collides(PhysicsObject other)
-    {
-        if (other is Ball ball)
-        {
-            double radii = Radius + ball.Radius;
-            Vector dp = Position - other.Position;
-            Vector dv = Velocity - other.Velocity;
+    //public override double Collides(PhysicsObject other)
+    //{
+    //    if (other is Ball ball)
+    //    {
+    //        double radii = Radius + ball.Radius;
+    //        Vector dp = Position - other.Position;
+    //        Vector dv = Velocity - other.Velocity;
 
-            double a = dv.LengthSquared;
-            double b = 2 * (dp * dv);
-            double c = dp.LengthSquared - radii * radii;
+    //        double a = dv.LengthSquared;
+    //        double b = 2 * (dp * dv);
+    //        double c = dp.LengthSquared - radii * radii;
 
-            // ABC - formula
-            double t = -(b + Math.Sqrt(b * b - 4 * a * c)) / (2 * a);
+    //        // ABC - formula
+    //        double t = -(b + Math.Sqrt(b * b - 4 * a * c)) / (2 * a);
 
-            if (t == 0 && b == 0) // If the balls graze eachother, they will not change velocity and keep finding the same collision.
-                return double.PositiveInfinity;
-            if (t >= 0)
-                return t;
-        }
-        return double.PositiveInfinity;
-    }
+    //        if (t == 0 && b == 0) // If the balls graze eachother, they will not change velocity and keep finding the same collision.
+    //            return double.PositiveInfinity;
+    //        if (t >= 0)
+    //            return t;
+    //    }
+    //    return double.PositiveInfinity;
+    //}
 
     public override void HandleCollision(PhysicsObject other)
     {

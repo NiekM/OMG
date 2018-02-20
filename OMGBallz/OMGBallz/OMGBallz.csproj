@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Physics\AxisAlignedWall.cs" />
     <Compile Include="Physics\Ball.cs" />
     <Compile Include="Physics\PhysicsObject.cs" />
     <Compile Include="Picture.cs" />

@@ -22,7 +22,7 @@ public class World
             {
                 PhysicsObject first = Objects[i], second = Objects[j];
 
-                collisions.Add((first.Collides(second), first, second));
+                collisions.Add((PhysicsObject.Collides(first, second), first, second));
             }
     }
 
@@ -61,7 +61,7 @@ public class World
                 PhysicsObject first = collision.Item2, second = collision.Item3;
 
                 if (first == a || first == b || second == a || second == b)
-                    newCollisions.Add((first.Collides(second), first, second));
+                    newCollisions.Add((PhysicsObject.Collides(first, second), first, second));
                 else
                     newCollisions.Add((collision.Item1 - timeStep, first, second));
             }

@@ -37,6 +37,7 @@ public class Visualizer : Form
             , new Ball(10, new Vector(10, 130), new Vector(3, 0))
             //, new Ball(10, new Vector(100, 160))
             , new Ball(10, new Vector(10, 160), new Vector(3, 0))
+            , new HorizontalWall(10)
             };
 
         world = new World(ballz);
