@@ -9,15 +9,17 @@ using System.Threading.Tasks;
 public abstract class PhysicsObject
 {
     public Vector Position, Velocity, Acceleration;
-    public float Mass;
+    public double Mass;
 
     public List<PhysicsObject> Collisions;
 
-    public abstract float Collides(PhysicsObject other);
+    public abstract double Collides(PhysicsObject other);
 
     public abstract void HandleCollision(PhysicsObject other);
 
-    public virtual void Update(float dt)
+    public abstract void ApplyCollision();
+
+    public virtual void Update(double dt)
     {
         Velocity += Acceleration * dt;
         Position += Velocity * dt;
@@ -30,21 +32,25 @@ public abstract class PhysicsObject
 
 public struct Vector
 {
-    public float X, Y;
+    public double X, Y;
 
-    public Vector(float x, float y)
+    public Vector(double x, double y)
     {
         (X, Y) = (x, y);
     }
 
-    public float LengthSquared => this * this;
+    public double LengthSquared => this * this;
 
-    public void Deconstruct(out float x, out float y)
+    public void Deconstruct(out double x, out double y)
     {
         x = X;
         y = Y;
     }
 
+    public static Vector operator -(Vector vector)
+    {
+        return new Vector(-vector.X, -vector.Y);
+    }
     public static Vector operator +(Vector first, Vector second)
     {
         return new Vector(first.X + second.X, first.Y + second.Y);
@@ -53,15 +59,15 @@ public struct Vector
     {
         return new Vector(first.X - second.X, first.Y - second.Y);
     }
-    public static float operator *(Vector first, Vector second)
+    public static double operator *(Vector first, Vector second)
     {
         return first.X * second.X + first.Y * second.Y;
     }
-    public static Vector operator *(Vector vector, float multiplier)
+    public static Vector operator *(Vector vector, double multiplier)
     {
         return new Vector(vector.X * multiplier, vector.Y * multiplier);
     }
-    public static Vector operator /(Vector vector, float divider)
+    public static Vector operator /(Vector vector, double divider)
     {
         return new Vector(vector.X / divider, vector.Y / divider);
     }

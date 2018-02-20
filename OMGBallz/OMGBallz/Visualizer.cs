@@ -30,11 +30,13 @@ public class Visualizer : Form
 
         PhysicsObject[] ballz = new PhysicsObject[]
             { new Ball(10, new Vector(100, 100))
-            , new Ball(10, new Vector(10, 100), new Vector(1, 0))
-            , new Ball(10, new Vector(100, 130))
-            , new Ball(10, new Vector(10, 130), new Vector(2, 0))
-            , new Ball(10, new Vector(100, 160))
-            , new Ball(10, new Vector(10, 160), new Vector(3, 0))
+            //, new Ball(10, new Vector(100, 60), new Vector(0, 1))
+            //, new Ball(10, new Vector(100, 160), new Vector(0, -2))
+            , new Ball(10, new Vector(220, 120), new Vector(-1, 0))
+            //, new Ball(10, new Vector(100, 130))
+            //, new Ball(10, new Vector(10, 130), new Vector(3, 0))
+            //, new Ball(10, new Vector(100, 160))
+            //, new Ball(10, new Vector(10, 160), new Vector(3, 0))
             };
 
         world = new World(ballz);

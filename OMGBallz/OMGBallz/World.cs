@@ -7,58 +7,39 @@ using System.Threading.Tasks;
 public class World
 {
     public List<PhysicsObject> Objects;
-    public Dictionary<(PhysicsObject, PhysicsObject), float> collisions;
-
-    float dt = 0;
-
+    public List<(double, PhysicsObject, PhysicsObject)> collisions;
+    
     public World(params PhysicsObject[] objects) 
         : this (objects.ToList())
     { }
     public World(List<PhysicsObject> objects)
     {
         Objects = objects;
-        collisions = new Dictionary<(PhysicsObject, PhysicsObject), float>();
+        collisions = new List<(double, PhysicsObject, PhysicsObject)>();
     }
 
     public void Update()
     {
-        //for (int i = 0; i < Objects.Count(); i++)
-        //    for (int j = i + 1; j < Objects.Count(); j++)
-        //    {
-        //        PhysicsObject first = Objects[i], second = Objects[j];
-
-        //        if (collisions[(first, second)] == dt)
-        //        {
-        //            collisions[(first, second)] = first.Collides(second);
-        //        }
-        //        else
-        //        {
-        //            collisions[(first, second)] -= dt;
-        //        }
-        //    }
-
         for (int i = 0; i < Objects.Count(); i++)
             for (int j = i + 1; j < Objects.Count(); j++)
             {
                 PhysicsObject first = Objects[i], second = Objects[j];
 
-                collisions[(first, second)] = first.Collides(second);
+                collisions.Add((first.Collides(second), first, second));
             }
 
-        dt = collisions.Min(kv => kv.Value);
+        collisions.Sort((alpha, beta) => alpha.Item1.CompareTo(beta.Item1));
+
+        (double dt, PhysicsObject a, PhysicsObject b) = collisions.First();
 
         foreach (PhysicsObject obj in Objects)
             obj.Update(dt);
+        
+        a.HandleCollision(b);
+        b.HandleCollision(a);
+        a.ApplyCollision();
+        b.ApplyCollision();
 
-        foreach (var collision in collisions)
-        {
-            if (collision.Value == dt)
-            {
-                (PhysicsObject first, PhysicsObject second) = collision.Key;
-
-                first.HandleCollision(second);
-                second.HandleCollision(first);
-            }
-        }
+        collisions.Clear();
     }
 }
