@@ -48,8 +48,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Ball.cs" />
-    <Compile Include="PhysicsObject.cs" />
+    <Compile Include="Physics\Ball.cs" />
+    <Compile Include="Physics\PhysicsObject.cs" />
     <Compile Include="Picture.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="Visualizer.cs">

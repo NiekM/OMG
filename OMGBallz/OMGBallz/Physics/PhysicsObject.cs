@@ -13,7 +13,9 @@ public abstract class PhysicsObject
 
     public List<PhysicsObject> Collisions;
 
-    public abstract bool Collides(PhysicsObject other);
+    public abstract float Collides(PhysicsObject other);
+
+    public abstract void HandleCollision(PhysicsObject other);
 
     public virtual void Update(float dt)
     {
@@ -36,6 +38,12 @@ public struct Vector
     }
 
     public float LengthSquared => this * this;
+
+    public void Deconstruct(out float x, out float y)
+    {
+        x = X;
+        y = Y;
+    }
 
     public static Vector operator +(Vector first, Vector second)
     {

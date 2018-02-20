@@ -29,24 +29,41 @@ public class Visualizer : Form
         Controls.Add(pictureBox);
 
         PhysicsObject[] ballz = new PhysicsObject[]
-            { new Ball(10, new Vector(100, 100), new Vector(-0.1f, 0))
-            , new Ball(10, new Vector(10, 100), new Vector(0.3f, 0.02f), mass : 5)
+            { new Ball(10, new Vector(100, 100))
+            , new Ball(10, new Vector(10, 100), new Vector(1, 0))
+            , new Ball(10, new Vector(100, 130))
+            , new Ball(10, new Vector(10, 130), new Vector(2, 0))
+            , new Ball(10, new Vector(100, 160))
+            , new Ball(10, new Vector(10, 160), new Vector(3, 0))
             };
 
         world = new World(ballz);
 
-        Timer timer = new Timer
-            { Interval = 1
-            };
+        KeyPreview = true;
 
-        timer.Tick += (sender, args) =>
+        KeyDown += (_, e) =>
         {
-            world.Update(2f);
-            Render(world.Objects);
-            pictureBox.Update();
+            if (e.KeyCode == Keys.Space)
+            {
+                world.Update();
+                Render(world.Objects);
+            }
         };
 
-        timer.Start();
+        Render(world.Objects);
+
+        //Timer timer = new Timer
+        //    { Interval = 1
+        //    };
+
+        //timer.Tick += (sender, args) =>
+        //{
+        //    world.Update(2f);
+        //    Render(world.Objects);
+        //    pictureBox.Update();
+        //};
+
+        //timer.Start();
     }
 
     public void Render(IEnumerable<PhysicsObject> objects)

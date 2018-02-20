@@ -20,29 +20,35 @@ public class Ball : PhysicsObject
         Collisions = new List<PhysicsObject>();
     }
 
-    public override bool Collides(PhysicsObject other)
+    public override float Collides(PhysicsObject other)
     {
         if (other is Ball ball)
         {
             float radii = Radius + ball.Radius;
-
-            return Util.DistanceSquared(this, other) <= radii * radii;
-        }
-        return false;
-    }
-
-    public override void Update(float dt)
-    {
-        foreach(PhysicsObject other in Collisions)
-        {
-            Vector distance = Position - other.Position;
+            Vector dp = Position - other.Position;
             Vector dv = Velocity - other.Velocity;
 
-            Velocity -= distance * (distance * dv / distance.LengthSquared)
-                * 2 * other.Mass / (Mass + other.Mass);
-        }
+            float a = dv.LengthSquared;
+            float b = 2 * (dp * dv);
+            float c = dp.LengthSquared - radii * radii;
 
-        base.Update(dt);
+            // ABC - formula
+            float t = -(b + (float)Math.Sqrt(b * b - 4 * a * c)) / (2 * a);
+
+            if (t >= 0)
+                return t;
+        }
+        return float.PositiveInfinity;
+    }
+
+    public override void HandleCollision(PhysicsObject other)
+    {
+        Vector dx = Position - other.Position;
+        Vector dv = Velocity - other.Velocity;
+
+        float mass = 2 * other.Mass / (Mass + other.Mass);
+
+        Velocity -= dx * (dx * dv) / dx.LengthSquared * mass;
     }
 
     public override void Draw(ref Picture picture)

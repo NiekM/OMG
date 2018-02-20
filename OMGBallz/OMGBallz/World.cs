@@ -7,31 +7,58 @@ using System.Threading.Tasks;
 public class World
 {
     public List<PhysicsObject> Objects;
+    public Dictionary<(PhysicsObject, PhysicsObject), float> collisions;
 
-    public World(params PhysicsObject[] objects)
-    {
-        Objects = objects.ToList();
-    }
+    float dt = 0;
+
+    public World(params PhysicsObject[] objects) 
+        : this (objects.ToList())
+    { }
     public World(List<PhysicsObject> objects)
     {
         Objects = objects;
+        collisions = new Dictionary<(PhysicsObject, PhysicsObject), float>();
     }
 
-    public void Update(float dt)
+    public void Update()
     {
+        //for (int i = 0; i < Objects.Count(); i++)
+        //    for (int j = i + 1; j < Objects.Count(); j++)
+        //    {
+        //        PhysicsObject first = Objects[i], second = Objects[j];
+
+        //        if (collisions[(first, second)] == dt)
+        //        {
+        //            collisions[(first, second)] = first.Collides(second);
+        //        }
+        //        else
+        //        {
+        //            collisions[(first, second)] -= dt;
+        //        }
+        //    }
+
         for (int i = 0; i < Objects.Count(); i++)
             for (int j = i + 1; j < Objects.Count(); j++)
             {
                 PhysicsObject first = Objects[i], second = Objects[j];
 
-                if (first.Collides(second))
-                {
-                    first.Collisions.Add(second);
-                    second.Collisions.Add(first);
-                }
+                collisions[(first, second)] = first.Collides(second);
             }
+
+        dt = collisions.Min(kv => kv.Value);
 
         foreach (PhysicsObject obj in Objects)
             obj.Update(dt);
+
+        foreach (var collision in collisions)
+        {
+            if (collision.Value == dt)
+            {
+                (PhysicsObject first, PhysicsObject second) = collision.Key;
+
+                first.HandleCollision(second);
+                second.HandleCollision(first);
+            }
+        }
     }
 }
