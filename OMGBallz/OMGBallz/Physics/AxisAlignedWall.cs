@@ -18,9 +18,6 @@ public class HorizontalWall : AxisAlignedWall
         Y = y;
     }
 
-    public override void ApplyCollision()
-    { }
-
     public override void Draw(ref Picture picture)
     {
         int y = (int)Y;
@@ -30,9 +27,24 @@ public class HorizontalWall : AxisAlignedWall
             picture.Draw(i, y, Color.White);
         }
     }
+}
 
-    public override void HandleCollision(PhysicsObject other)
+public class VerticalWall : AxisAlignedWall
+{
+    public double X;
+
+    public VerticalWall(double x)
     {
-        throw new NotImplementedException();
+        X = x;
+    }
+
+    public override void Draw(ref Picture picture)
+    {
+        int x = (int)X;
+
+        for (int i = 0; i < picture.Bitmap.Height; i++)
+        {
+            picture.Draw(x, i, Color.White);
+        }
     }
 }

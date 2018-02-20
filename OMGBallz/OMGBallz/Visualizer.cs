@@ -29,15 +29,20 @@ public class Visualizer : Form
         Controls.Add(pictureBox);
 
         PhysicsObject[] ballz = new PhysicsObject[]
-            { new Ball(10, new Vector(100, 100))
-            , new Ball(10, new Vector(105, 40), new Vector(0, 1))
-            , new Ball(10, new Vector(100, 160), new Vector(0, -2))
-            , new Ball(10, new Vector(220, 120), new Vector(-1, 0))
+            { new Ball(10, new Vector(100, 100), new Vector(1, 0))
+            , new Ball(10, new Vector(105, 40), new Vector(1, 3))
+            , new Ball(10, new Vector(100, 160), new Vector(2, -2))
+            , new Ball(10, new Vector(220, 120), new Vector(-1, 4))
+            , new Ball(30, new Vector(200, 200), mass : 20)
+            , new Ball(4, new Vector(30, 200), mass : 20)
             //, new Ball(10, new Vector(100, 130))
-            , new Ball(10, new Vector(10, 130), new Vector(3, 0))
+            , new Ball(10, new Vector(10, 130), new Vector(3, -1))
             //, new Ball(10, new Vector(100, 160))
             , new Ball(10, new Vector(10, 160), new Vector(3, 0))
             , new HorizontalWall(10)
+            , new HorizontalWall(240)
+            , new VerticalWall(10)
+            , new VerticalWall(240)
             };
 
         world = new World(ballz);
@@ -64,7 +69,6 @@ public class Visualizer : Form
         {
             world.Update(0.2f);
             Render(world.Objects);
-            //pictureBox.Update();
         };
 
         timer.Start();
