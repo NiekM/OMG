@@ -11,12 +11,10 @@ public abstract class PhysicsObject
     public Vector Position, Velocity, Acceleration;
     public double Mass;
 
-    //public List<PhysicsObject> Collisions;
-
-    //public abstract double Collides(PhysicsObject other);
-
     public static double Collides(PhysicsObject first, PhysicsObject second)
     {
+        double t = double.PositiveInfinity;
+
         if (first is Ball ball)
         {
             if (second is Ball other)
@@ -30,34 +28,115 @@ public abstract class PhysicsObject
                 double c = dp.LengthSquared - radii * radii;
 
                 // ABC - formula
-                double t = -(b + Math.Sqrt(b * b - 4 * a * c)) / (2 * a);
+                t = -(b + Math.Sqrt(b * b - 4 * a * c)) / (2 * a);
 
                 if (t == 0 && b == 0) // If the balls graze eachother, they will not change velocity and keep finding the same collision.
                     return double.PositiveInfinity;
-                if (t >= 0)
-                    return t;
             }
-            else if (second is HorizontalWall wall)
+            else if (second is HorizontalWall horizontalWall)
             {
+                double distance = horizontalWall.Y - ball.Position.Y;
 
+                if (distance > 0 && ball.Velocity.Y > 0)
+                    t = (distance - ball.Radius) / ball.Velocity.Y;
+                else if (distance < 0 && ball.Velocity.Y < 0)
+                    t = (distance + ball.Radius) / ball.Velocity.Y;
+            }
+            else if (second is VerticalWall verticalWall)
+            {
+                double distance = verticalWall.X - ball.Position.X;
+
+                if (distance > 0 && ball.Velocity.X > 0)
+                    t = (distance - ball.Radius) / ball.Velocity.X;
+                else if (distance < 0 && ball.Velocity.X < 0)
+                    t = (distance + ball.Radius) / ball.Velocity.X;
             }
         }
-        return double.PositiveInfinity;
+
+        if (t >= 0)
+            return t;
+        else
+            return double.PositiveInfinity;
     }
 
-    public abstract void HandleCollision(PhysicsObject other);
+    public static void HandleCollision(PhysicsObject first, PhysicsObject second)
+    {
+        if (first is Ball ball)
+        {
+            if (second is Ball other)
+            {
+                Vector dx = ball.Position - other.Position;
+                Vector dv = ball.Velocity - other.Velocity;
+                
+                Vector diff = dx * 2 * (dx * dv) / (dx.LengthSquared * (ball.Mass + other.Mass));
 
-    public abstract void ApplyCollision();
+                ball.Velocity -= diff * other.Mass;
+                other.Velocity += diff * ball.Mass;
+            }
+            else if (second is HorizontalWall)
+            {
+                var (x, y) = ball.Velocity;
+                ball.Velocity = new Vector(x, -y);
+            }
+            else if (second is VerticalWall)
+            {
+                var (x, y) = ball.Velocity;
+                ball.Velocity = new Vector(-x, y);
+            }
+        }
+    }
 
     public virtual void Update(double dt)
     {
         Velocity += Acceleration * dt;
         Position += Velocity * dt;
-
-        //Collisions.Clear();
     }
 
     public abstract void Draw(ref Picture picture);
+}
+
+public struct Collision : IComparable<Collision>
+{
+    public double Time;
+    public PhysicsObject First, Second;
+
+    public Collision(double time, PhysicsObject first, PhysicsObject second)
+    {
+        Time = time;
+        First = first;
+        Second = second;
+    }
+
+    public int CompareTo(Collision other)
+    {
+        return Time.CompareTo(other.Time);
+    }
+
+    public bool Contains(params PhysicsObject[] objects)
+    {
+        foreach (var obj in objects)
+        {
+            if (obj == First || obj == Second)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Collision Update(double dt, bool disturbed)
+    {
+        if (disturbed)
+        {
+            Time = PhysicsObject.Collides(First, Second);
+        }
+        else
+        {
+            Time -= dt;
+        }
+
+        return this;
+    }
 }
 
 public struct Vector
