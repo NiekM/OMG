@@ -24,7 +24,7 @@ public class HorizontalWall : AxisAlignedWall
 
         for (int i = 0; i < picture.Bitmap.Width; i++)
         {
-            picture.Draw(i, y, Color.White);
+            picture.Draw(i - picture.Offset.X, y, Color.White);
         }
     }
 }
@@ -44,7 +44,7 @@ public class VerticalWall : AxisAlignedWall
 
         for (int i = 0; i < picture.Bitmap.Height; i++)
         {
-            picture.Draw(x, i, Color.White);
+            picture.Draw(x, i - picture.Offset.Y, Color.White);
         }
     }
 }

@@ -37,7 +37,7 @@ public class World
             foreach (PhysicsObject obj in Objects)
                 obj.Update(collision.Time);
 
-            PhysicsObject.HandleCollision(collision.First, collision.Second);
+            Collision.Execute(collision.First, collision.Second);
 
             timeStep = collision.Time;
 
@@ -53,7 +53,7 @@ public class World
 
             collisions = newCollisions;
 
-            Update(dt - timeStep);
+            Update(dt - timeStep); // Maybe remove the recursion
         }
         else
         {

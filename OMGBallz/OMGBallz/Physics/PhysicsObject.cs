@@ -10,40 +10,10 @@ public abstract class PhysicsObject
 {
     public Vector Position, Velocity, Acceleration;
     public double Mass;
-    
-    public static void HandleCollision(PhysicsObject first, PhysicsObject second)
-    {
-        if (first is Ball ball)
-        {
-            if (second is Ball other)
-            {
-                Vector dx = ball.Position - other.Position;
-                Vector dv = ball.Velocity - other.Velocity;
-
-                //double mass = 2 * other.Mass / (Mass + other.Mass);
-
-                //Vector difference = -dx * (dx * dv) / dx.LengthSquared * mass;
-
-                Vector diff = dx * 2 * (dx * dv) / (dx.LengthSquared * (ball.Mass + other.Mass));
-
-                ball.Velocity -= diff * other.Mass;
-                other.Velocity += diff * ball.Mass;
-            }
-            else if (second is HorizontalWall)
-            {
-                var (x, y) = ball.Velocity;
-                ball.Velocity = new Vector(x, -y);
-            }
-            else if (second is VerticalWall)
-            {
-                var (x, y) = ball.Velocity;
-                ball.Velocity = new Vector(-x, y);
-            }
-        }
-    }
 
     public virtual void Update(double dt)
     {
+        // This is not correct. Updating position with velocity only works when the accelaration is 0.
         Velocity += Acceleration * dt;
         Position += Velocity * dt;
     }
@@ -84,7 +54,7 @@ public struct Collision : IComparable<Collision>
     {
         if (disturbed)
         {
-            Time = Await(First, Second);
+            return Find(First, Second);
         }
         else
         {
@@ -94,57 +64,141 @@ public struct Collision : IComparable<Collision>
         return this;
     }
 
+    public static void Execute(PhysicsObject first, PhysicsObject second)
+    {
+        switch (first)
+        {
+            case Ball ball:
+                switch (second)
+                {
+                    case Ball other:
+                        {
+                            Vector dx = ball.Position - other.Position;
+                            Vector dv = ball.Velocity - other.Velocity;
+
+                            Vector diff = dx * 2 * (dx * dv) / (dx.LengthSquared * (ball.Mass + other.Mass));
+
+                            ball.Velocity -= diff * other.Mass;
+                            other.Velocity += diff * ball.Mass;
+                        }
+                        break;
+                    case HorizontalWall hWall:
+                        {
+                            var (x, y) = ball.Velocity;
+                            ball.Velocity = new Vector(x, -y);
+                        }
+                        break;
+                    case VerticalWall vWall:
+                        {
+                            var (x, y) = ball.Velocity;
+                            ball.Velocity = new Vector(-x, y);
+                        }
+                        break;
+                }
+                break;
+            case HorizontalWall hWall:
+                switch (second)
+                {
+                    case Ball ball:
+                        Execute(second, first);
+                        break;
+                }
+                break;
+            case VerticalWall vWall:
+                switch (second)
+                {
+                    case Ball ball:
+                        Execute(second, first);
+                        break;
+                }
+                break;
+        }
+    }
+
+    // NOOOOOOOOO! Stupid precision errors... Now objects move through eachother
+    // depending on the speed when they are too close...
     public static Collision Find(PhysicsObject first, PhysicsObject second)
     {
-        return new Collision(Await(first, second), first, second);
+        double time = Await(first, second);
+
+        if (time < 0 || double.IsNaN(time))
+        {
+            time = double.PositiveInfinity;
+        }
+
+        return new Collision(time, first, second);
     }
 
     public static double Await(PhysicsObject first, PhysicsObject second)
     {
-        double t = double.PositiveInfinity;
-
-        if (first is Ball ball)
+        switch(first)
         {
-            if (second is Ball other)
-            {
-                double radii = ball.Radius + other.Radius;
-                Vector dp = ball.Position - other.Position;
-                Vector dv = ball.Velocity - other.Velocity;
+            case Ball ball:
+                switch (second)
+                {
+                    case Ball other:
 
-                double a = dv.LengthSquared;
-                double b = 2 * (dp * dv);
-                double c = dp.LengthSquared - radii * radii;
+                        double time;
+                        { 
+                            double radii = ball.Radius + other.Radius;
+                            Vector dp = ball.Position - other.Position;
+                            Vector dv = ball.Velocity - other.Velocity;
 
-                // ABC - formula
-                t = -(b + Math.Sqrt(b * b - 4 * a * c)) / (2 * a);
+                            double a = dv.LengthSquared;
+                            double b = 2 * (dp * dv);
+                            double c = dp.LengthSquared - radii * radii;
 
-                if (t == 0 && b == 0) // If the balls graze eachother, they will not change velocity and keep finding the same collision.
-                    return double.PositiveInfinity;
-            }
-            else if (second is HorizontalWall horizontalWall)
-            {
-                double distance = horizontalWall.Y - ball.Position.Y;
+                            // ABC - formula
+                            time = -(b + Math.Sqrt(b * b - 4 * a * c)) / (2 * a);
 
-                if (distance > 0 && ball.Velocity.Y > 0)
-                    t = (distance - ball.Radius) / ball.Velocity.Y;
-                else if (distance < 0 && ball.Velocity.Y < 0)
-                    t = (distance + ball.Radius) / ball.Velocity.Y;
-            }
-            else if (second is VerticalWall verticalWall)
-            {
-                double distance = verticalWall.X - ball.Position.X;
+                            /* If the balls graze eachother, 
+                             * they will not change velocity and 
+                             * keep finding the same collision
+                             */
+                            if (time == 0 && b == 0)
+                                return double.PositiveInfinity;
+                            else
+                                return time;
+                        }
+                    case HorizontalWall hWall:
+                        {
+                            double distance = hWall.Y - ball.Position.Y;
 
-                if (distance > 0 && ball.Velocity.X > 0)
-                    t = (distance - ball.Radius) / ball.Velocity.X;
-                else if (distance < 0 && ball.Velocity.X < 0)
-                    t = (distance + ball.Radius) / ball.Velocity.X;
-            }
+                            if (distance > 0 && ball.Velocity.Y > 0)
+                                return (distance - ball.Radius) / ball.Velocity.Y;
+                            else if (distance < 0 && ball.Velocity.Y < 0)
+                                return (distance + ball.Radius) / ball.Velocity.Y;
+                            else
+                                return double.PositiveInfinity;
+                        }
+                    case VerticalWall vWall:
+                        {
+                            double distance = vWall.X - ball.Position.X;
+
+                            if (distance > 0 && ball.Velocity.X > 0)
+                                return (distance - ball.Radius) / ball.Velocity.X;
+                            else if (distance < 0 && ball.Velocity.X < 0)
+                                return (distance + ball.Radius) / ball.Velocity.X;
+                            else
+                                return double.PositiveInfinity;
+                        }
+                } break;
+            case HorizontalWall hWall:
+                switch(second)
+                {
+                    case Ball ball:
+                        return Await(second, first);
+                } break;
+            case VerticalWall vWall:
+                switch (second)
+                {
+                    case Ball ball:
+                        return Await(second, first);
+                }
+                break;
         }
 
-        if (t >= 0)
-            return t;
-        else
-            return double.PositiveInfinity;
+        return double.PositiveInfinity;
     }
 }
 

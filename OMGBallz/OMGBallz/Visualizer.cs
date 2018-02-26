@@ -14,70 +14,126 @@ public class Visualizer : Form
     PictureBox pictureBox;
     World world;
 
+    double speed = 2f;
+
+    (int X, int Y) prev;
+    (int X, int Y)? drag = null;
+    
     public Visualizer()
     {
         Init();
     }
 
     public void Init()
-    {        
+    {
+        Size = new Size(600, 600);
+
         pictureBox = new PictureBox
             { BackColor = Color.Brown
             , Size = Size
             };
 
+        picture = new Picture(Size.Width, Size.Height)
+            { Offset = (Size.Width / 2, Size.Height / 2)
+            };
+
         Controls.Add(pictureBox);
 
-        PhysicsObject[] ballz = new PhysicsObject[]
-            { new Ball(10, new Vector(100, 100), new Vector(1, 0))
-            , new Ball(10, new Vector(105, 40), new Vector(1, 3))
-            , new Ball(10, new Vector(100, 160), new Vector(2, -2))
-            , new Ball(10, new Vector(220, 120), new Vector(-1, 4))
-            , new Ball(30, new Vector(200, 200), mass : 20)
-            , new Ball(4, new Vector(30, 200), mass : 20)
-            //, new Ball(10, new Vector(100, 130))
-            , new Ball(10, new Vector(10, 130), new Vector(3, -1))
-            //, new Ball(10, new Vector(100, 160))
-            , new Ball(10, new Vector(10, 160), new Vector(3, 0))
+        List<PhysicsObject> ballz = new List<PhysicsObject>
+            { new HorizontalWall(-100)
+            , new HorizontalWall(100)
+            , new VerticalWall(-100)
+            , new VerticalWall(100)
+            };
+
+        Random r = new Random();
+
+        // Lots of balls on very slight angles tend to have some difficulties:
+        // - Stack overflow
+        // - Moving trough walls
+
+        for (int i = -4; i <= 4; i++)
+            for (int j = -4; j <= 4; j++)
+                if (r.NextDouble() > 0.4)
+                {
+                    Vector velocity = new Vector(r.NextDouble() * 2 - 1, r.NextDouble() * 2 - 1);
+
+                    
+                    //velocity = new Vector(1, 0.01);
+
+                    ballz.Add(new Ball(10, new Vector(i * 20, j * 20), velocity));
+                }
+
+        // A ball jammed between two walls moving into either wall causes a stack overflow,
+        // because the gamestate can never advance; there will always be a new collision
+        // at time 0.
+        // Also works with any other very massive objects.
+
+        ballz = new List<PhysicsObject>()
+            { new HorizontalWall(-10)
             , new HorizontalWall(10)
-            , new HorizontalWall(240)
-            , new VerticalWall(10)
-            , new VerticalWall(240)
+            , new VerticalWall(-100)
+            , new VerticalWall(100)
+            , new Ball(10, new Vector(-40, 0), density : 1)
+            , new Ball(10, new Vector(-20, 0), density : 1)
+            , new Ball(10, new Vector(0, 0), new Vector(1, 0))
+            , new Ball(10, new Vector(20, 0), density : 1)
+            , new Ball(10, new Vector(40, 0), density : 1)
             };
 
         world = new World(ballz);
-
-        //KeyPreview = true;
-
-        //KeyDown += (_, e) =>
-        //{
-        //    if (e.KeyCode == Keys.Space)
-        //    {
-        //        world.Update(10);
-        //        Render(world.Objects);
-        //    }
-        //};
-
         Render(world.Objects);
 
-        Timer timer = new Timer
+        KeyPreview = true;
+        KeyDown += (_, e) =>
         {
-            Interval = 1
+            switch(e.KeyCode)
+            {
+                // Too high speed can cause a stack overflow.
+                case Keys.Up:
+                    speed *= 1.1f;
+                    break;
+                case Keys.Down:
+                    speed /= 1.1f;
+                    break;
+            }
         };
 
-        timer.Tick += (sender, args) =>
-        {
-            world.Update(0.2f);
-            Render(world.Objects);
-        };
+        //Timer timer = new Timer
+        //{
+        //    Interval = 1
+        //};
+        //timer.Tick += (sender, args) =>
+        //{
+        //    world.Update(speed);
+        //    Render(world.Objects);
+        //};
+        //timer.Start();
 
-        timer.Start();
+        world.Update(1e4);
+            
+        pictureBox.MouseDown += (_, e) =>
+        {
+            prev = picture.Offset;
+            drag = (e.X, e.Y);
+        };
+        pictureBox.MouseUp += (_, e) =>
+        {
+            drag = null;
+        };
+        pictureBox.MouseMove += (_, e) =>
+        {
+            if (drag == null)
+                return;
+
+            picture.Offset.X = prev.X + e.X - drag.Value.X;
+            picture.Offset.Y = prev.Y + e.Y - drag.Value.Y;
+        };
     }
 
     public void Render(IEnumerable<PhysicsObject> objects)
     {
-        picture = new Picture(Size.Width, Size.Height);
-        pictureBox.Image = picture.Bitmap;
+        picture.Clear();
 
         foreach (PhysicsObject obj in objects)
             obj.Draw(ref picture);

@@ -9,13 +9,13 @@ public class Ball : PhysicsObject
 {
     public double Radius;
 
-    public Ball(double radius, Vector position, Vector velocity = default(Vector), Vector acceleration = default(Vector), double mass = 1)
+    public Ball(double radius, Vector position, Vector velocity = default(Vector), Vector acceleration = default(Vector), double density = 1)
     {
         Radius = radius;
         Position = position;
         Velocity = velocity;
         Acceleration = acceleration;
-        Mass = mass;
+        Mass = Math.PI * radius * radius * density;
     }
 
     public override void Draw(ref Picture picture)
