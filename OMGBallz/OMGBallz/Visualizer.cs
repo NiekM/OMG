@@ -40,21 +40,17 @@ public class Visualizer : Form
         Controls.Add(pictureBox);
 
         List<PhysicsObject> ballz = new List<PhysicsObject>
-            { new HorizontalWall(-100)
-            , new HorizontalWall(100)
-            , new VerticalWall(-100)
-            , new VerticalWall(100)
+            { new HorizontalWall(-90) { Velocity = new Vector(0, 0.1), Mass = 1e7 }
+            , new HorizontalWall(90) { Velocity = new Vector(0, -0.1), Mass = 1e7 }
+            , new VerticalWall(-90) { Velocity = new Vector(0.1, 0), Mass = 1e7 }
+            , new VerticalWall(90) { Velocity = new Vector(-0.1, 0), Mass = 1e7 }
             };
 
         Random r = new Random();
 
-        // Lots of balls on very slight angles tend to have some difficulties:
-        // - Stack overflow
-        // - Moving trough walls
-
         for (int i = -4; i <= 4; i++)
             for (int j = -4; j <= 4; j++)
-                if (r.NextDouble() > 0.4)
+                if (r.NextDouble() > 0.9)
                 {
                     Vector velocity = new Vector(r.NextDouble() * 2 - 1, r.NextDouble() * 2 - 1);
 
@@ -69,17 +65,17 @@ public class Visualizer : Form
         // at time 0.
         // Also works with any other very massive objects.
 
-        ballz = new List<PhysicsObject>()
-            { new HorizontalWall(-10)
-            , new HorizontalWall(10)
-            , new VerticalWall(-100)
-            , new VerticalWall(100)
-            , new Ball(10, new Vector(-40, 0), density : 1)
-            , new Ball(10, new Vector(-20, 0), density : 1)
-            , new Ball(10, new Vector(0, 0), new Vector(1, 0))
-            , new Ball(10, new Vector(20, 0), density : 1)
-            , new Ball(10, new Vector(40, 0), density : 1)
-            };
+        //ballz = new List<PhysicsObject>()
+        //    { new HorizontalWall(-10)
+        //    , new HorizontalWall(10)
+        //    , new VerticalWall(-100)
+        //    , new VerticalWall(100)
+        //    , new Ball(10, new Vector(-40, 0), density : 1)
+        //    , new Ball(10, new Vector(-20, 0), density : 1)
+        //    , new Ball(10, new Vector(0, 0), new Vector(1, 0))
+        //    , new Ball(10, new Vector(20, 0), density : 1)
+        //    , new Ball(10, new Vector(40, 0), density : 1)
+        //    };
 
         world = new World(ballz);
         Render(world.Objects);
@@ -89,7 +85,6 @@ public class Visualizer : Form
         {
             switch(e.KeyCode)
             {
-                // Too high speed can cause a stack overflow.
                 case Keys.Up:
                     speed *= 1.1f;
                     break;
@@ -99,19 +94,20 @@ public class Visualizer : Form
             }
         };
 
-        //Timer timer = new Timer
-        //{
-        //    Interval = 1
-        //};
-        //timer.Tick += (sender, args) =>
-        //{
-        //    world.Update(speed);
-        //    Render(world.Objects);
-        //};
-        //timer.Start();
+        Timer timer = new Timer
+        {
+            Interval = 1
+        };
+        timer.Tick += (sender, args) =>
+        {
+            world.Update(speed);
+            Render(world.Objects);
+        };
+        timer.Start();
 
-        world.Update(1e4);
-            
+        //world.Update(1e7);
+        //Render(world.Objects);
+
         pictureBox.MouseDown += (_, e) =>
         {
             prev = picture.Offset;

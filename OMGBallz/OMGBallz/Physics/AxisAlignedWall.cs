@@ -11,7 +11,11 @@ public abstract class AxisAlignedWall : PhysicsObject
 
 public class HorizontalWall : AxisAlignedWall
 {
-    public double Y;
+    public double Y
+    {
+        get { return Position.Y; }
+        set { Position.Y = value; }
+    }
 
     public HorizontalWall(double y)
     {
@@ -31,7 +35,11 @@ public class HorizontalWall : AxisAlignedWall
 
 public class VerticalWall : AxisAlignedWall
 {
-    public double X;
+    public double X
+    {
+        get { return Position.X; }
+        set { Position.X = value; }
+    }
 
     public VerticalWall(double x)
     {

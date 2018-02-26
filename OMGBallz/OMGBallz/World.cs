@@ -26,48 +26,89 @@ public class World
             }
     }
 
-    public void Update(double dt)
+    public void Update(double time)
     {
-        Collision collision = collisions.Min();
-
-        double timeStep = dt;
-
-        if (collision.Time < dt)
+        while (time > 0)
         {
-            foreach (PhysicsObject obj in Objects)
-                obj.Update(collision.Time);
-
-            Collision.Execute(collision.First, collision.Second);
-
-            timeStep = collision.Time;
-
+            Collision collision = collisions.Min();
+            
             var newCollisions = new List<Collision>();
 
-            foreach (Collision col in collisions)
+            if (collision.Time < time)
             {
-                newCollisions.Add(col.Update
-                    ( timeStep
-                    , col.Contains(collision.First, collision.Second)
-                    ));
+                foreach (PhysicsObject obj in Objects)
+                {
+                    obj.Update(collision.Time);
+                }
+
+                Collision.Execute(collision.First, collision.Second);
+
+                foreach (Collision col in collisions)
+                {
+                    newCollisions.Add(col.Update
+                        (collision.Time
+                        , col.Contains(collision.First, collision.Second)
+                        ));
+                }
+            }
+            else
+            {
+                foreach (PhysicsObject obj in Objects)
+                {
+                    obj.Update(time);
+                }
+
+                foreach (Collision col in collisions)
+                {
+                    newCollisions.Add(col.Update(time, false));
+                }
             }
 
             collisions = newCollisions;
 
-            Update(dt - timeStep); // Maybe remove the recursion
+            time -= collision.Time;
         }
-        else
-        {
-            foreach (PhysicsObject obj in Objects)
-                obj.Update(timeStep);
 
-            var newCollisions = new List<Collision>();
+        
 
-            foreach (Collision col in collisions)
-            {
-                newCollisions.Add(col.Update(timeStep, false));
-            }
+        //double timeStep = dt;
 
-            collisions = newCollisions;
-        }
+        //if (collision.Time < dt)
+        //{
+        //    foreach (PhysicsObject obj in Objects)
+        //        obj.Update(collision.Time);
+
+        //    Collision.Execute(collision.First, collision.Second);
+
+        //    timeStep = collision.Time;
+
+        //    var newCollisions = new List<Collision>();
+
+        //    foreach (Collision col in collisions)
+        //    {
+        //        newCollisions.Add(col.Update
+        //            ( timeStep
+        //            , col.Contains(collision.First, collision.Second)
+        //            ));
+        //    }
+
+        //    collisions = newCollisions;
+
+        //    Update(dt - timeStep); // Maybe remove the recursion
+        //}
+        //else
+        //{
+        //    foreach (PhysicsObject obj in Objects)
+        //        obj.Update(timeStep);
+
+        //    var newCollisions = new List<Collision>();
+
+        //    foreach (Collision col in collisions)
+        //    {
+        //        newCollisions.Add(col.Update(timeStep, false));
+        //    }
+
+        //    collisions = newCollisions;
+        //}
     }
 }

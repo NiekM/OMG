@@ -84,14 +84,23 @@ public struct Collision : IComparable<Collision>
                         break;
                     case HorizontalWall hWall:
                         {
-                            var (x, y) = ball.Velocity;
-                            ball.Velocity = new Vector(x, -y);
+                            double newBallY = (ball.Velocity.Y * (ball.Mass - hWall.Mass) + 2 * hWall.Mass * hWall.Velocity.Y) / (ball.Mass + hWall.Mass);
+                            double newWallY = (hWall.Velocity.Y * (hWall.Mass - ball.Mass) + 2 * ball.Mass * ball.Velocity.Y) / (ball.Mass + hWall.Mass);
+
+                            ball.Velocity.Y = newBallY;
+                            hWall.Velocity.Y = newWallY;
                         }
                         break;
                     case VerticalWall vWall:
                         {
-                            var (x, y) = ball.Velocity;
-                            ball.Velocity = new Vector(-x, y);
+                            double newBallX = (ball.Velocity.X * (ball.Mass - vWall.Mass) + 2 * vWall.Mass * vWall.Velocity.X) / (ball.Mass + vWall.Mass);
+                            double newWallX = (vWall.Velocity.X * (vWall.Mass - ball.Mass) + 2 * ball.Mass * ball.Velocity.X) / (ball.Mass + vWall.Mass);
+
+                            ball.Velocity.X = newBallX;
+                            vWall.Velocity.X = newWallX;
+
+                            //var (x, y) = ball.Velocity;
+                            //ball.Velocity = new Vector(-x + vWall.Velocity.X, y);
                         }
                         break;
                 }
@@ -164,10 +173,10 @@ public struct Collision : IComparable<Collision>
                         {
                             double distance = hWall.Y - ball.Position.Y;
 
-                            if (distance > 0 && ball.Velocity.Y > 0)
-                                return (distance - ball.Radius) / ball.Velocity.Y;
-                            else if (distance < 0 && ball.Velocity.Y < 0)
-                                return (distance + ball.Radius) / ball.Velocity.Y;
+                            if (distance > 0 && ball.Velocity.Y - hWall.Velocity.Y > 0)
+                                return (distance - ball.Radius) / (ball.Velocity.Y - hWall.Velocity.Y);
+                            else if (distance < 0 && ball.Velocity.Y - hWall.Velocity.Y < 0)
+                                return (distance + ball.Radius) / (ball.Velocity.Y - hWall.Velocity.Y);
                             else
                                 return double.PositiveInfinity;
                         }
@@ -175,10 +184,10 @@ public struct Collision : IComparable<Collision>
                         {
                             double distance = vWall.X - ball.Position.X;
 
-                            if (distance > 0 && ball.Velocity.X > 0)
-                                return (distance - ball.Radius) / ball.Velocity.X;
-                            else if (distance < 0 && ball.Velocity.X < 0)
-                                return (distance + ball.Radius) / ball.Velocity.X;
+                            if (distance > 0 && ball.Velocity.X - vWall.Velocity.X > 0)
+                                return (distance - ball.Radius) / (ball.Velocity.X - vWall.Velocity.X);
+                            else if (distance < 0 && ball.Velocity.X - vWall.Velocity.X < 0)
+                                return (distance + ball.Radius) / (ball.Velocity.X - vWall.Velocity.X);
                             else
                                 return double.PositiveInfinity;
                         }
