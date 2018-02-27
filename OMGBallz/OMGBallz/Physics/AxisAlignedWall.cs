@@ -6,8 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 public abstract class AxisAlignedWall : PhysicsObject
-{
-}
+{ }
 
 public class HorizontalWall : AxisAlignedWall
 {
@@ -54,5 +53,25 @@ public class VerticalWall : AxisAlignedWall
         {
             picture.Draw(x, i - picture.Offset.Y, Color.White);
         }
+    }
+}
+
+public class Membrane : VerticalWall
+{
+    public double Origin;
+    public double C = 0.001;
+
+    public Membrane(double x) : base(x)
+    {
+        Origin = x;
+    }
+
+    public override void Update(double dt)
+    {
+        double tSquared = dt * dt;
+
+        Position.X = (Position.X / tSquared + Velocity.X / dt + Origin * C) / (1 / tSquared + C);
+
+        Velocity.X += (Origin - Position.X) * C * dt;
     }
 }

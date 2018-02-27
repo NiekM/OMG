@@ -14,7 +14,7 @@ public abstract class PhysicsObject
     public virtual void Update(double dt)
     {
         // This is not correct. Updating position with velocity only works when the accelaration is 0.
-        Velocity += Acceleration * dt;
+        // Velocity += Acceleration * dt;
         Position += Velocity * dt;
     }
 
@@ -169,6 +169,19 @@ public struct Collision : IComparable<Collision>
                             else
                                 return time;
                         }
+                    case Membrane membrane:
+                        {
+                            double a = ball.Velocity.X * membrane.C;
+                            double b = -membrane.Origin * membrane.C;
+                            double c = ball.Velocity.X + ball.Position.X * membrane.C - membrane.Velocity.X;
+                            double d = ball.Position.X - membrane.Position.X;
+
+                            // uuhhh...
+                            double x = -b / (3 * a) - (Math.Pow(2, 1 / 3d) * (-b * b + 3 * a * c)) / (3 * a * Math.Pow(-2 * b * b * b + 9 * a * b * c - 27 * a * a * d + Math.Sqrt(4 * Math.Pow(-b * b + 3 * a * c, 3) + Math.Pow(-2 * b * b * b + 9 * a * b * c - 27 * a * a * d, 2)), (1 / 3d)))
+                                + (3 * a * Math.Pow(-2 * b * b * b + 9 * a * b * c - 27 * a * a * d + Math.Sqrt(4 * Math.Pow(-b * b + 3 * a * c, 3) + Math.Pow(-2 * b * b * b + 9 * a * b * c - 27 * a * a * d, 2)), (1 / 3d))) / (3 * Math.Pow(2, 1 / 3d) * a);
+
+                            return x;
+                        }
                     case HorizontalWall hWall:
                         {
                             double distance = hWall.Y - ball.Position.Y;
@@ -191,6 +204,12 @@ public struct Collision : IComparable<Collision>
                             else
                                 return double.PositiveInfinity;
                         }
+                } break;
+            case Membrane membrane:
+                switch(second)
+                {
+                    case Ball ball:
+                        return Await(second, first);
                 } break;
             case HorizontalWall hWall:
                 switch(second)
