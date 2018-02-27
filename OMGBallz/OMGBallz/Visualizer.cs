@@ -40,17 +40,24 @@ public class Visualizer : Form
         Controls.Add(pictureBox);
 
         List<PhysicsObject> ballz = new List<PhysicsObject>
-            { new HorizontalWall(-90) { Velocity = new Vector(0, 0.1), Mass = 1e7 }
-            , new HorizontalWall(90) { Velocity = new Vector(0, -0.1), Mass = 1e7 }
-            , new VerticalWall(-90) { Velocity = new Vector(0.1, 0), Mass = 1e7 }
-            , new VerticalWall(90) { Velocity = new Vector(-0.1, 0), Mass = 1e7 }
+            { new HorizontalWall(-90) { Velocity = new Vector(0, 0.1), Mass = 1e8 }
+            , new HorizontalWall(90) { Velocity = new Vector(0, -0.1), Mass = 1e8 }
+            , new VerticalWall(-90) { Velocity = new Vector(0.1, 0), Mass = 1e8 }
+            , new VerticalWall(90) { Velocity = new Vector(-0.1, 0), Mass = 1e8 }
             };
+
+        ballz.AddRange(new List<PhysicsObject>
+            { new Ball(3, new Vector(0, 160), density: 1e10)
+            , new Ball(3, new Vector(0, -160), density: 1e10)
+            , new Ball(3, new Vector(160, 0), density: 1e10)
+            , new Ball(3, new Vector(-160, 0), density: 1e10)
+            });
 
         Random r = new Random();
 
         for (int i = -4; i <= 4; i++)
             for (int j = -4; j <= 4; j++)
-                if (r.NextDouble() > 0.9)
+                if (r.NextDouble() > 0.8)
                 {
                     Vector velocity = new Vector(r.NextDouble() * 2 - 1, r.NextDouble() * 2 - 1);
 
