@@ -11,6 +11,8 @@ public abstract class PhysicsObject
     public Vector Position, Velocity, Acceleration;
     public double Mass;
 
+    public Color Color = Color.White;
+
     public virtual void Update(double dt)
     {
         // This is not correct. Updating position with velocity only works when the accelaration is 0.
@@ -84,23 +86,25 @@ public struct Collision : IComparable<Collision>
                         break;
                     case HorizontalWall hWall:
                         {
-                            double newBallY = (ball.Velocity.Y * (ball.Mass - hWall.Mass) + 2 * hWall.Mass * hWall.Velocity.Y) / (ball.Mass + hWall.Mass);
-                            double newWallY = (hWall.Velocity.Y * (hWall.Mass - ball.Mass) + 2 * ball.Mass * ball.Velocity.Y) / (ball.Mass + hWall.Mass);
 
-                            ball.Velocity.Y = newBallY;
-                            hWall.Velocity.Y = newWallY;
+                            double diff = ball.Mass - hWall.Mass;
+                            double div = 1 / (ball.Mass + hWall.Mass);
+
+                            (ball.Velocity.Y, hWall.Velocity.Y) =
+                                ( (ball.Velocity.Y * diff + 2 * hWall.Mass * hWall.Velocity.Y) * div
+                                , (hWall.Velocity.Y * -diff + 2 * ball.Mass * ball.Velocity.Y) * div
+                                );
                         }
                         break;
                     case VerticalWall vWall:
                         {
-                            double newBallX = (ball.Velocity.X * (ball.Mass - vWall.Mass) + 2 * vWall.Mass * vWall.Velocity.X) / (ball.Mass + vWall.Mass);
-                            double newWallX = (vWall.Velocity.X * (vWall.Mass - ball.Mass) + 2 * ball.Mass * ball.Velocity.X) / (ball.Mass + vWall.Mass);
+                            double diff = ball.Mass - vWall.Mass;
+                            double div = 1 / (ball.Mass + vWall.Mass);
 
-                            ball.Velocity.X = newBallX;
-                            vWall.Velocity.X = newWallX;
-
-                            //var (x, y) = ball.Velocity;
-                            //ball.Velocity = new Vector(-x + vWall.Velocity.X, y);
+                            (ball.Velocity.X, vWall.Velocity.X) =
+                                ( (ball.Velocity.X * diff + 2 * vWall.Mass * vWall.Velocity.X) * div
+                                , (vWall.Velocity.X * -diff + 2 * ball.Mass * ball.Velocity.X) * div
+                                );
                         }
                         break;
                 }
@@ -169,17 +173,34 @@ public struct Collision : IComparable<Collision>
                             else
                                 return time;
                         }
-                    case Membrane membrane:
+                    case Membrane membrane: // Something something does not always find correct answer
                         {
+                            int compare = ball.Position.X.CompareTo(membrane.Position.X);
+
+                            double ballX = ball.Position.X - compare * ball.Radius;
+
                             double a = ball.Velocity.X * membrane.C;
-                            double b = -membrane.Origin * membrane.C;
-                            double c = ball.Velocity.X + ball.Position.X * membrane.C - membrane.Velocity.X;
-                            double d = ball.Position.X - membrane.Position.X;
+                            double b = (ballX - membrane.Origin) * membrane.C;
+                            double c = ball.Velocity.X - membrane.Velocity.X;
+                            double d = ballX - membrane.Position.X;
 
-                            // uuhhh...
-                            double x = -b / (3 * a) - (Math.Pow(2, 1 / 3d) * (-b * b + 3 * a * c)) / (3 * a * Math.Pow(-2 * b * b * b + 9 * a * b * c - 27 * a * a * d + Math.Sqrt(4 * Math.Pow(-b * b + 3 * a * c, 3) + Math.Pow(-2 * b * b * b + 9 * a * b * c - 27 * a * a * d, 2)), (1 / 3d)))
-                                + (3 * a * Math.Pow(-2 * b * b * b + 9 * a * b * c - 27 * a * a * d + Math.Sqrt(4 * Math.Pow(-b * b + 3 * a * c, 3) + Math.Pow(-2 * b * b * b + 9 * a * b * c - 27 * a * a * d, 2)), (1 / 3d))) / (3 * Math.Pow(2, 1 / 3d) * a);
+                            double delta_0 = b * b - 3 * a * c;
+                            double delta_1 = 2 * b * b * b - 9 * a * b * c + 27 * a * a * d;
 
+                            double e = delta_1 * delta_1 - 4 * delta_0 * delta_0 * delta_0;
+
+                            double delta = e / (-27 * a * a);
+
+                            // (delta_1 +- Math.Sqrt(delta_1 * delta_1 - 4 * delta_0 * delta_0 * delta_0)) / 2;
+
+                            double root = (delta_1 + Math.Sqrt(delta_1 * delta_1 - 4 * delta_0 * delta_0 * delta_0)) / 2;
+
+                            double coefficient = Util.CubicRoot(root);
+
+                            // +- (b + coefficient + delta_0 / coefficient) / (3 * a)
+
+                            double x = -(b + coefficient + delta_0 / coefficient) / (3 * a);
+                            
                             return x;
                         }
                     case HorizontalWall hWall:

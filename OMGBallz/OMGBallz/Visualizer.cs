@@ -43,15 +43,16 @@ public class Visualizer : Form
             { new HorizontalWall(-90) { Mass = 1e100 }
             , new HorizontalWall(90) { Mass = 1e100 }
             , new VerticalWall(-90) { Mass = 1e100 }
-            //, new VerticalWall(90)
-            , new Membrane(90) { Mass = 1e4, Velocity = new Vector(0, 0), C = 0.001 }
+            , new VerticalWall(90) { Mass = 1e100 }
+            //, new Membrane(90) { Mass = 1e4, Velocity = new Vector(-1, 0), C = 0.001, Color = Color.Black }
+            //, new Membrane(-90, 0.001) { Mass = 1e4, Velocity = new Vector(-1, 0), Color = Color.Black }
             };
 
-        ballz.AddRange(new List<PhysicsObject>
-            { //new Ball(3, new Vector(160, 0), density: 1e10)
-            //, new Ball(3, new Vector(-160, 0), density: 1e10)
-             new Ball(5, new Vector(0,0), new Vector(0.1, 0))
-            });
+        //ballz.AddRange(new List<PhysicsObject>
+        //    { //new Ball(3, new Vector(160, 0), density: 1e10)
+        //    //, new Ball(3, new Vector(-160, 0), density: 1e10)
+        //     new Ball(10, new Vector(0,0), new Vector(1, 0))
+        //    });
 
         Random r = new Random();
 
@@ -64,7 +65,7 @@ public class Visualizer : Form
                     
                     //velocity = new Vector(1, 0.01);
 
-                    //ballz.Add(new Ball(10, new Vector(i * 20, j * 20), velocity));
+                    ballz.Add(new Ball(10, new Vector(i * 20, j * 20), velocity));
                 }
 
         // A ball jammed between two walls moving into either wall causes a stack overflow,
@@ -88,47 +89,71 @@ public class Visualizer : Form
         Render(world.Objects);
 
         KeyPreview = true;
-        KeyDown += (_, e) =>
+
+        bool dynamic = true;
+        
+        Timer timer = new Timer
         {
-            switch(e.KeyCode)
-            {
-                case Keys.Up:
-                    speed *= 1.1f;
-                    break;
-                case Keys.Down:
-                    speed /= 1.1f;
-                    break;
-            }
+            Interval = 1
         };
-
-        //Timer timer = new Timer
-        //{
-        //    Interval = 1
-        //};
-        //timer.Tick += (sender, args) =>
-        //{
-        //    world.Update(speed);
-        //    Render(world.Objects);
-        //};
-        //timer.Start();
-
+        timer.Tick += (sender, args) =>
         {
-            var collisions = new List<Collision>();
-
-            for (int i = 0; i < world.Objects.Count(); i++)
-                for (int j = i + 1; j < world.Objects.Count(); j++)
-                {
-                    PhysicsObject first = world.Objects[i], second = world.Objects[j];
-
-                    collisions.Add(Collision.Find(first, second));
-                }
-
-            double time = collisions.Min().Time;
-
-            foreach (var obj in world.Objects)
-                obj.Update(time);
+            if (dynamic)
+                world.Update(speed);
 
             Render(world.Objects);
+        };
+        timer.Start();
+
+        if (dynamic)
+        {
+            KeyDown += (_, e) =>
+            {
+                switch (e.KeyCode)
+                {
+                    case Keys.Up:
+                        speed *= 1.1f;
+                        break;
+                    case Keys.Down:
+                        speed /= 1.1f;
+                        break;
+                }
+            };
+        }
+        else
+        {
+            KeyDown += (_, e) =>
+            {
+                switch (e.KeyCode)
+                {
+                    case Keys.Space:
+                        NextCollision();
+                        break;
+                }
+            };
+
+            void NextCollision()
+            {
+
+                var collisions = new List<Collision>();
+
+                for (int i = 0; i < world.Objects.Count(); i++)
+                    for (int j = i + 1; j < world.Objects.Count(); j++)
+                    {
+                        PhysicsObject first = world.Objects[i], second = world.Objects[j];
+
+                        collisions.Add(Collision.Find(first, second));
+                    }
+
+                Collision collision = collisions.Min();
+
+                foreach (var obj in world.Objects)
+                    obj.Update(collision.Time);
+
+                Collision.Execute(collision.First, collision.Second);
+
+                Render(world.Objects);
+            }
         }
 
         //world.Update(1e7);

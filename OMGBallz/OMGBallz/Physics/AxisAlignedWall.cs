@@ -27,7 +27,7 @@ public class HorizontalWall : AxisAlignedWall
 
         for (int i = 0; i < picture.Bitmap.Width; i++)
         {
-            picture.Draw(i - picture.Offset.X, y, Color.White);
+            picture.Draw(i - picture.Offset.X, y, Color);
         }
     }
 }
@@ -51,7 +51,7 @@ public class VerticalWall : AxisAlignedWall
 
         for (int i = 0; i < picture.Bitmap.Height; i++)
         {
-            picture.Draw(x, i - picture.Offset.Y, Color.White);
+            picture.Draw(x, i - picture.Offset.Y, Color);
         }
     }
 }
@@ -59,19 +59,25 @@ public class VerticalWall : AxisAlignedWall
 public class Membrane : VerticalWall
 {
     public double Origin;
-    public double C = 0.001;
+    public double C;
 
-    public Membrane(double x) : base(x)
+    public Membrane(double x, double c) : base(x)
     {
         Origin = x;
+        C = c;
     }
 
     public override void Update(double dt)
     {
         double tSquared = dt * dt;
 
-        Position.X = (Position.X / tSquared + Velocity.X / dt + Origin * C) / (1 / tSquared + C);
+        (Position.X, Velocity.X) =
+            ( (Position.X / tSquared + Velocity.X / dt + Origin * C) / (1 / tSquared + C)
+            //, Velocity.X + (Origin - Position.X) * C * dt
+            , Velocity.X / (1 + C * tSquared) + (Origin - Position.X) * C / (1 / dt + C * dt)
+            );
 
-        Velocity.X += (Origin - Position.X) * C * dt;
+        if (double.IsNaN(Position.X))
+            throw new Exception();
     }
 }

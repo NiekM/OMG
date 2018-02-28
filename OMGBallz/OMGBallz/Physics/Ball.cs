@@ -27,7 +27,7 @@ public class Ball : PhysicsObject
             {
                 if (i * i + j * j <= r * r)
                 {
-                    picture.Draw(x + i, y + j, Color.White);
+                    picture.Draw(x + i, y + j, Color);
                 }
             }
     }
