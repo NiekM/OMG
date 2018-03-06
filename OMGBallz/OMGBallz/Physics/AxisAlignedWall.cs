@@ -10,48 +10,53 @@ public abstract class AxisAlignedWall : PhysicsObject
 
 public class HorizontalWall : AxisAlignedWall
 {
-    public double Y
-    {
-        get { return Position.Y; }
-        set { Position.Y = value; }
-    }
-
     public HorizontalWall(double y)
     {
-        Y = y;
+        Position.Y = y;
     }
 
     public override void Draw(ref Picture picture)
     {
-        int y = (int)Y;
-
-        for (int i = 0; i < picture.Bitmap.Width; i++)
-        {
-            picture.Draw(i - picture.Offset.X, y, Color);
-        }
+        picture.DrawHorizontalDivider(Position.Y, Color);
     }
 }
 
 public class VerticalWall : AxisAlignedWall
 {
-    public double X
-    {
-        get { return Position.X; }
-        set { Position.X = value; }
-    }
-
     public VerticalWall(double x)
     {
-        X = x;
+        Position.X = x;
     }
 
     public override void Draw(ref Picture picture)
     {
-        int x = (int)X;
+        picture.DrawVerticalDivider(Position.X, Color);
+    }
 
-        for (int i = 0; i < picture.Bitmap.Height; i++)
+    public class Speaker : VerticalWall
+    {
+        public Membrane Membrane;
+
+        public Speaker(double x, double c = 1e-3) : base(x)
         {
-            picture.Draw(x, i - picture.Offset.Y, Color);
+            Membrane = new Membrane(x, c)
+                { Color = Color.Aquamarine
+                , Mass = Mass
+                };
+        }
+
+        public override void Update(double dt)
+        {
+            base.Update(dt);
+
+            Membrane.Update(dt);
+        }
+
+        public override void Draw(ref Picture picture)
+        {
+            base.Draw(ref picture);
+
+            Membrane.Draw(ref picture);
         }
     }
 }
@@ -76,8 +81,5 @@ public class Membrane : VerticalWall
             //, Velocity.X + (Origin - Position.X) * C * dt
             , Velocity.X / (1 + C * tSquared) + (Origin - Position.X) * C / (1 / dt + C * dt)
             );
-
-        if (double.IsNaN(Position.X))
-            throw new Exception();
     }
 }

@@ -20,15 +20,17 @@ public class Ball : PhysicsObject
 
     public override void Draw(ref Picture picture)
     {
-        int r = (int)Radius, x = (int)Position.X, y = (int)Position.Y;
+        picture.DrawCircle(Position, Radius, Color);
 
-        for (int i = -r; i <= r; i++)
-            for (int j = -r; j <= r; j++)
-            {
-                if (i * i + j * j <= r * r)
-                {
-                    picture.Draw(x + i, y + j, Color);
-                }
-            }
+        //int r = (int)Radius, x = (int)Position.X, y = (int)Position.Y;
+
+        //for (int i = -r; i <= r; i++)
+        //    for (int j = -r; j <= r; j++)
+        //    {
+        //        if (i * i + j * j <= r * r)
+        //        {
+        //            picture.Draw(x + i, y + j, Color);
+        //        }
+        //    }
     }
 }

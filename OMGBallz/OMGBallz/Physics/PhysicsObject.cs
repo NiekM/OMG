@@ -105,6 +105,11 @@ public struct Collision : IComparable<Collision>
                                 ( (ball.Velocity.X * diff + 2 * vWall.Mass * vWall.Velocity.X) * div
                                 , (vWall.Velocity.X * -diff + 2 * ball.Mass * ball.Velocity.X) * div
                                 );
+
+                            if (vWall is VerticalWall.Speaker speaker)
+                            {
+                                speaker.Membrane.Velocity.X -= ball.Velocity.X;
+                            }
                         }
                         break;
                 }
@@ -126,10 +131,14 @@ public struct Collision : IComparable<Collision>
                 }
                 break;
         }
-    }
 
-    // NOOOOOOOOO! Stupid precision errors... Now objects move through eachother
-    // depending on the speed when they are too close...
+        // With friction:
+        //
+        //first.Velocity *= 0.95;
+        //second.Velocity *= 0.95;
+        //
+    }
+    
     public static Collision Find(PhysicsObject first, PhysicsObject second)
     {
         double time = Await(first, second);
@@ -205,7 +214,7 @@ public struct Collision : IComparable<Collision>
                         }
                     case HorizontalWall hWall:
                         {
-                            double distance = hWall.Y - ball.Position.Y;
+                            double distance = hWall.Position.Y - ball.Position.Y;
 
                             if (distance > 0 && ball.Velocity.Y - hWall.Velocity.Y > 0)
                                 return (distance - ball.Radius) / (ball.Velocity.Y - hWall.Velocity.Y);
@@ -216,7 +225,7 @@ public struct Collision : IComparable<Collision>
                         }
                     case VerticalWall vWall:
                         {
-                            double distance = vWall.X - ball.Position.X;
+                            double distance = vWall.Position.X - ball.Position.X;
 
                             if (distance > 0 && ball.Velocity.X - vWall.Velocity.X > 0)
                                 return (distance - ball.Radius) / (ball.Velocity.X - vWall.Velocity.X);
@@ -259,6 +268,7 @@ public struct Vector
     {
         (X, Y) = (x, y);
     }
+    public Vector(double xy) : this(xy, xy) { }
 
     public double LengthSquared => this * this;
 
@@ -283,6 +293,10 @@ public struct Vector
     public static double operator *(Vector first, Vector second)
     {
         return first.X * second.X + first.Y * second.Y;
+    }
+    public static Vector operator /(Vector first, Vector second)
+    {
+        return new Vector(first.X / second.X, first.Y / second.Y);
     }
     public static Vector operator *(Vector vector, double multiplier)
     {
