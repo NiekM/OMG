@@ -48,10 +48,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataCollector.cs" />
     <Compile Include="Physics\AxisAlignedWall.cs" />
     <Compile Include="Physics\Ball.cs" />
+    <Compile Include="Physics\Box.cs" />
     <Compile Include="Physics\PhysicsObject.cs" />
     <Compile Include="Picture.cs" />
+    <Compile Include="Plotter.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Util.cs" />
     <Compile Include="Visualizer.cs">
       <SubType>Form</SubType>

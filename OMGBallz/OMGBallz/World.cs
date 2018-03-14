@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 public class World
 {
@@ -23,7 +24,10 @@ public class World
             {
                 PhysicsObject first = Objects[i], second = Objects[j];
 
-                collisions.Add(Collision.Find(first, second));
+                Collision? collision = Collision.Find(first, second);
+                
+                if (collision.HasValue)
+                    collisions.Add(collision.Value);
             }
     }
 
@@ -79,73 +83,98 @@ public class World
 
 public struct Scene
 {
-    public World World;
     public Vector TopLeft, BottomRight;
 
-    public Scene(World world, Vector topLeft, Vector bottomRight)
+    public Func<World> World;
+    public Func<double> Data;
+
+    public Scene(Func<World> world, Vector topLeft, Vector bottomRight, Func<double> data = null)
     {
         World = world;
         TopLeft = topLeft;
         BottomRight = bottomRight;
+        Data = data;
     }
 
     public static Scene Bullet
     {
         get
         {
-            List<PhysicsObject> obj = new List<PhysicsObject>
+            World World()
+            {
+                List<PhysicsObject> objects = new List<PhysicsObject>
                 { new HorizontalWall(-40) { Mass = 1e100 }
                 , new HorizontalWall(40) { Mass = 1e100 }
                 , new VerticalWall(-100) { Mass = 1e100 }
                 , new VerticalWall(-200) { Mass = 1e100, Velocity = new Vector(10, 0) }
                 };
 
-            for (int i = -90; i <= -20; i += 10)
-                for (int j = -30; j <= 30; j += 10)
-                {
-                    obj.Add(new Ball(4, new Vector(i, j)));
-                }
+                for (int i = -90; i <= -20; i += 10)
+                    for (int j = -30; j <= 30; j += 10)
+                    {
+                        objects.Add(new Ball(4, new Vector(i, j)));
+                    }
 
-            obj.Add(new Ball(1, new Vector(0, -50), density: 1e300));
+                objects.Add(new Ball(1, new Vector(0, -50), density: 1e300));
 
-            obj.Add(new Ball(39, new Vector(40, 0), density: 1));
+                objects.Add(new Ball(39, new Vector(40, 0), density: 1));
 
-            return new Scene(new World(obj), new Vector(-200), new Vector(200));
+                return new World(objects);
+            }
+
+            return new Scene(World, new Vector(-200), new Vector(200));
         }
     }
 
     public static Scene Mix
     {
-        get
+        get // Maybe add divider in the middle, remove divider after starting parameters have no direct influence on the outcome anymore.
         {
-            List<PhysicsObject> obj = new List<PhysicsObject>
-                    { new HorizontalWall(-120) { Mass = 1e100 }
-                    , new HorizontalWall(120) { Mass = 1e100 }
-                    , new VerticalWall(-120) { Mass = 1e10 }
-                    , new VerticalWall(120) { Mass = 1e100 }
-                    };
+            Box box = new Box(new Vector(-100), new Vector(100));
+            List<PhysicsObject> first = new List<PhysicsObject>(), second = new List<PhysicsObject>();
 
-            Random r = new Random();
+            World World()
+            {
 
-            for (int i = -90; i <= 90; i += 30)
-                for (int j = -90; j <= -10; j += 30)
-                    obj.Add(new Ball(12, new Vector(i, j), density: 1e-1)
+                List<PhysicsObject> objects = new List<PhysicsObject>();
+
+                objects.AddRange(box.Walls);
+
+                Random r = new Random();
+
+                for (int i = -3; i < 3; i++)
+                    for (int j = -3; j < 3; j++)
                     {
-                        Color = Color.WhiteSmoke
-                        ,
-                        Velocity = new Vector(r.NextDouble() * 2 - 1, r.NextDouble() * 2 - 1)
-                    });
+                        bool f = i >= 0;
 
-            for (int i = -90; i <= 90; i += 30)
-                for (int j = 10; j <= 90; j += 30)
-                    obj.Add(new Ball(7, new Vector(i, j))
-                    {
-                        Color = Color.Black
-                        ,
-                        Velocity = new Vector(r.NextDouble() * 2 - 1, r.NextDouble() * 2 - 1)
-                    });
+                        Ball ball = new Ball(f ? 9 : 5, new Vector(i * 30 + 15, j * 30 + 15))
+                        {
+                            Color = f ? Util.Colors.Pink : Color.White
+                            ,
+                            Velocity = Vector.Directional(r.NextDouble() * 2 * Math.PI)
+                            ,
+                            Mass = f ? 1:1
+                        };
 
-            return new Scene(new World(obj), new Vector(-140), new Vector(140));
+                        (f ? first : second).Add(ball);
+                    }
+
+
+                objects.AddRange(first);
+                objects.AddRange(second);
+
+                return new World(objects);
+            }
+
+            double Data()
+            {
+                double f = box.Homogeneity(first, 6, 1000);
+                double s = box.Homogeneity(second, 6, 1000);
+
+                return f + s; //$"{f :#.##} + {s :#.##} = {f + s :#.##}";
+            }
+
+            return new Scene(World, new Vector(-140), new Vector(140), Data);
         }
     }
 
@@ -153,35 +182,40 @@ public struct Scene
     {
         get
         {
-            List<PhysicsObject> obj = new List<PhysicsObject>
+            World World()
+            {
+                List<PhysicsObject> objects = new List<PhysicsObject>
                     { new HorizontalWall(-120) { Mass = 1e6 }
                     , new HorizontalWall(120) { Mass = 1e6 }
                     , new VerticalWall(-120) { Mass = 1e6 }
                     , new VerticalWall(120) { Mass = 1e6 }
                     };
 
-            foreach (var wall in obj)
-                wall.Velocity = wall.Position / -240;
+                foreach (var wall in objects)
+                    wall.Velocity = wall.Position / -240;
 
-            obj.AddRange(new List<PhysicsObject>
+                objects.AddRange(new List<PhysicsObject>
                 { new Ball(5, new Vector(200, 0), density: 1e100)
                 , new Ball(5, new Vector(-200, 0), density: 1e100)
                 , new Ball(5, new Vector(0, 200), density: 1e100)
                 , new Ball(5, new Vector(0, -200), density: 1e100)
                 });
 
-            Random r = new Random();
+                Random r = new Random();
 
-            for (int i = -90; i <= 90; i += 60)
-                for (int j = -90; j <= 90; j += 60)
-                    obj.Add(new Ball(12, new Vector(i, j), density: 1e-1)
-                    {
-                        Color = Color.WhiteSmoke
-                        ,
-                        Velocity = new Vector(r.NextDouble() * 2 - 1, r.NextDouble() * 2 - 1)
-                    });
+                for (int i = -90; i <= 90; i += 60)
+                    for (int j = -90; j <= 90; j += 60)
+                        objects.Add(new Ball(12, new Vector(i, j), density: 1e-1)
+                        {
+                            Color = Color.WhiteSmoke
+                            ,
+                            Velocity = Vector.Directional(r.NextDouble() * 2 * Math.PI)//new Vector(r.NextDouble() * 2 - 1, r.NextDouble() * 2 - 1)
+                        });
 
-            return new Scene(new World(obj), new Vector(-140), new Vector(140));
+                return new World(objects);
+            }
+
+            return new Scene(World, new Vector(-140), new Vector(140));
         }
     }
 }

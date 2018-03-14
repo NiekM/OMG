@@ -6,7 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 public abstract class AxisAlignedWall : PhysicsObject
-{ }
+{
+    public override double Size => 0;
+}
 
 public class HorizontalWall : AxisAlignedWall
 {

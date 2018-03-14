@@ -20,6 +20,8 @@ public abstract class PhysicsObject
         Position += Velocity * dt;
     }
 
+    public abstract double Size { get; }
+
     public abstract void Draw(ref Picture picture);
 }
 
@@ -56,7 +58,7 @@ public struct Collision : IComparable<Collision>
     {
         if (disturbed)
         {
-            return Find(First, Second);
+            return Find(First, Second).Value;
         }
         else
         {
@@ -91,7 +93,7 @@ public struct Collision : IComparable<Collision>
                             double div = 1 / (ball.Mass + hWall.Mass);
 
                             (ball.Velocity.Y, hWall.Velocity.Y) =
-                                ( (ball.Velocity.Y * diff + 2 * hWall.Mass * hWall.Velocity.Y) * div
+                                ((ball.Velocity.Y * diff + 2 * hWall.Mass * hWall.Velocity.Y) * div
                                 , (hWall.Velocity.Y * -diff + 2 * ball.Mass * ball.Velocity.Y) * div
                                 );
                         }
@@ -102,7 +104,7 @@ public struct Collision : IComparable<Collision>
                             double div = 1 / (ball.Mass + vWall.Mass);
 
                             (ball.Velocity.X, vWall.Velocity.X) =
-                                ( (ball.Velocity.X * diff + 2 * vWall.Mass * vWall.Velocity.X) * div
+                                ((ball.Velocity.X * diff + 2 * vWall.Mass * vWall.Velocity.X) * div
                                 , (vWall.Velocity.X * -diff + 2 * ball.Mass * ball.Velocity.X) * div
                                 );
 
@@ -131,17 +133,16 @@ public struct Collision : IComparable<Collision>
                 }
                 break;
         }
-
-        // With friction:
-        //
-        //first.Velocity *= 0.95;
-        //second.Velocity *= 0.95;
-        //
     }
     
-    public static Collision Find(PhysicsObject first, PhysicsObject second)
+    public static Collision? Find(PhysicsObject first, PhysicsObject second)
     {
-        double time = Await(first, second);
+        double? collision = Await(first, second);
+
+        if (!collision.HasValue)
+            return null;
+
+        double time = collision.Value;
 
         if (time < 0 || double.IsNaN(time))
         {
@@ -151,7 +152,10 @@ public struct Collision : IComparable<Collision>
         return new Collision(time, first, second);
     }
 
-    public static double Await(PhysicsObject first, PhysicsObject second)
+    //
+    // Still weird glitches where balls can't find the collision with a wall if they are all moving in the same direction and bouncing on eachother.
+    //
+    public static double? Await(PhysicsObject first, PhysicsObject second)
     {
         switch(first)
         {
@@ -235,25 +239,14 @@ public struct Collision : IComparable<Collision>
                                 return double.PositiveInfinity;
                         }
                 } break;
-            case Membrane membrane:
+            case AxisAlignedWall wall:
                 switch(second)
                 {
                     case Ball ball:
                         return Await(second, first);
+                    case AxisAlignedWall other:
+                        return null;
                 } break;
-            case HorizontalWall hWall:
-                switch(second)
-                {
-                    case Ball ball:
-                        return Await(second, first);
-                } break;
-            case VerticalWall vWall:
-                switch (second)
-                {
-                    case Ball ball:
-                        return Await(second, first);
-                }
-                break;
         }
 
         return double.PositiveInfinity;
@@ -270,6 +263,10 @@ public struct Vector
     }
     public Vector(double xy) : this(xy, xy) { }
 
+    public static Vector Directional(double angle) =>
+        new Vector(Math.Cos(angle), Math.Sin(angle));
+
+    public double Length => Math.Sqrt(LengthSquared);
     public double LengthSquared => this * this;
 
     public void Deconstruct(out double x, out double y)

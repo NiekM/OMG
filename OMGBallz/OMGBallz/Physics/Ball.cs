@@ -15,22 +15,13 @@ public class Ball : PhysicsObject
         Position = position;
         Velocity = velocity;
         Acceleration = acceleration;
-        Mass = Math.PI * radius * radius * density;
+        Mass = Size * density;
     }
+
+    public override double Size => Math.PI * Radius * Radius;
 
     public override void Draw(ref Picture picture)
     {
         picture.DrawCircle(Position, Radius, Color);
-
-        //int r = (int)Radius, x = (int)Position.X, y = (int)Position.Y;
-
-        //for (int i = -r; i <= r; i++)
-        //    for (int j = -r; j <= r; j++)
-        //    {
-        //        if (i * i + j * j <= r * r)
-        //        {
-        //            picture.Draw(x + i, y + j, Color);
-        //        }
-        //    }
     }
 }

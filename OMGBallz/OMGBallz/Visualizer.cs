@@ -1,17 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 public class Visualizer : Form
 {
     Picture picture;
     PictureBox pictureBox;
+    World world;
     Scene scene;
 
     double speed = 2f;
@@ -28,10 +23,12 @@ public class Visualizer : Form
     {
         scene = Scene.Mix;
 
+        world = scene.World();
+
         Size = new Size(600, 600);
 
         pictureBox = new PictureBox
-            { BackColor = Color.Brown
+            { BackColor = Util.Colors.DarkPurple
             , Size = Size
             };
 
@@ -39,78 +36,42 @@ public class Visualizer : Form
 
         Controls.Add(pictureBox);
 
-        Render(scene.World.Objects);
+        Render();
 
         KeyPreview = true;
 
-        bool dynamic = true;
-        
         Timer timer = new Timer
         {
             Interval = 1
         };
         timer.Tick += (sender, args) =>
         {
-            if (dynamic && !pause)
-                scene.World.Advance(speed);
+            if (!pause)
+                world.Advance(speed);
 
-            Render(scene.World.Objects);
+            Render();
         };
         timer.Start();
-
-        if (dynamic)
+        
+        KeyDown += (_, e) =>
         {
-            KeyDown += (_, e) =>
+            switch (e.KeyCode)
             {
-                switch (e.KeyCode)
-                {
-                    case Keys.Up:
-                        speed *= 1.1f;
-                        break;
-                    case Keys.Down:
-                        speed /= 1.1f;
-                        break;
-                    case Keys.Space:
-                        pause = false;
-                        break;
-                }
-            };
-        }
-        else
-        {
-            KeyDown += (_, e) =>
-            {
-                switch (e.KeyCode)
-                {
-                    case Keys.Space:
-                        NextCollision();
-                        break;
-                }
-            };
-
-            void NextCollision()
-            {
-
-                var collisions = new List<Collision>();
-
-                for (int i = 0; i < scene.World.Objects.Count(); i++)
-                    for (int j = i + 1; j < scene.World.Objects.Count(); j++)
-                    {
-                        PhysicsObject first = scene.World.Objects[i], second = scene.World.Objects[j];
-
-                        collisions.Add(Collision.Find(first, second));
-                    }
-
-                Collision collision = collisions.Min();
-
-                scene.World.Update(collision.Time);
-
-                Collision.Execute(collision.First, collision.Second);
-
-                Render(scene.World.Objects);
+                case Keys.Up:
+                    speed *= 1.1f;
+                    break;
+                case Keys.Down:
+                    speed /= 1.1f;
+                    break;
+                case Keys.Space:
+                    pause = false;
+                    break;
+                case Keys.ControlKey:
+                    Console.WriteLine(scene.Data());
+                    break;
             }
-        }
-
+        };
+    
         pictureBox.MouseWheel += (_, e) =>
         {
             picture.Zoom(1 - e.Delta / 1000d, picture.RealPosition((e.X, e.Y)));
@@ -133,11 +94,11 @@ public class Visualizer : Form
         };
     }
 
-    public void Render(IEnumerable<PhysicsObject> objects)
+    public void Render()
     {
         picture.Clear();
 
-        foreach (PhysicsObject obj in objects)
+        foreach (PhysicsObject obj in world.Objects)
             obj.Draw(ref picture);
 
         pictureBox.Image = picture.Bitmap;

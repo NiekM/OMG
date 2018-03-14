@@ -63,7 +63,7 @@ public class Picture
         return TopLeft + new Vector((BottomRight.X - TopLeft.X) * relative.X, (BottomRight.Y - TopLeft.Y) * relative.Y);
     }
 
-    public void Draw(int x, int y, Color color)
+    public void DrawPixel(int x, int y, Color color)
     {
         if (x < 0 || x >= Bitmap.Width || y < 0 || y >= Bitmap.Height)
             return;
@@ -86,7 +86,7 @@ public class Picture
             for (int j = top; j <= bottom; j++)
             {
                 if ((RealPosition((i, j)) - position).LengthSquared <= radius * radius)
-                    Draw(i, j, color);
+                    DrawPixel(i, j, color);
             }
     }
 
@@ -95,13 +95,13 @@ public class Picture
         int position = CanvasPosition(new Vector(y)).y;
 
         for (int i = 0; i <= Size.X; i++)
-            Draw(i, position, color);
+            DrawPixel(i, position, color);
     }
     public void DrawVerticalDivider(double x, Color color)
     {
         int position = CanvasPosition(new Vector(x)).x;
 
         for (int i = 0; i <= Size.Y; i++)
-            Draw(position, i, color);
+            DrawPixel(position, i, color);
     }
 }
