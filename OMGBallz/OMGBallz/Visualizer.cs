@@ -14,14 +14,9 @@ public class Visualizer : Form
 
     (int X, int Y)? drag = null;
     
-    public Visualizer()
-    {
-        Init();
-    }
-
-    public void Init()
-    {
-        scene = Scene.Mix;
+    public Visualizer(Scene scene)
+    { 
+        this.scene = scene;
 
         world = scene.World();
 
@@ -32,7 +27,7 @@ public class Visualizer : Form
             , Size = Size
             };
 
-        picture = new Picture((Size.Width, Size.Height), scene.TopLeft, scene.BottomRight);
+        picture = new Picture((pictureBox.Size.Width, pictureBox.Size.Height), scene.TopLeft, scene.BottomRight);
 
         Controls.Add(pictureBox);
 
@@ -67,7 +62,7 @@ public class Visualizer : Form
                     pause = false;
                     break;
                 case Keys.ControlKey:
-                    Console.WriteLine(scene.Data());
+                    Console.WriteLine(world.Data());
                     break;
             }
         };

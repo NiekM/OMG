@@ -12,25 +12,12 @@ static class Program
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
 
-#if true
-        Application.Run(new Visualizer());
+        Application.Run(new Visualizer(Scene.MixScene(new ParticleData(400, 1, 5, 3, energy: 10))));
 
-        if (true)
-        {
-            Plotter averagePlotter = new Plotter();
-
-            string file(string name) => $"../../../../Data/equalWeight{ name }.txt";
-
-            for (int i = 0; i < 10; i++)
-                averagePlotter.Plot(file($"{i}"), Util.Colors.Pink);
-
-            averagePlotter.Plot(file("Average"), Color.White);
-
-            Application.Run(averagePlotter);
-        }
-#else
-        DataCollector.CollectData("equalWeight", () => Scene.Mix, 1000, 10, 10, 1);
-#endif
-
+        //DataCollector.CollectData(10, 10f, 10, 10, new Simulation[] 
+        //    { new Simulation("equal", new ParticleData(10, 1, 3, 3))
+        //    , new Simulation("nequal", new ParticleData(4, 1, 8, 4), new ParticleData(12, 1, 4, 3))
+        //    }
+        //);
     }
 }
