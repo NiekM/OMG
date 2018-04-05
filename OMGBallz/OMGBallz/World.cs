@@ -87,13 +87,19 @@ public struct ParticleData
     public int Columns;
     public double Energy;
     
-    public ParticleData(double surface, double mass, int rows, int columns, double? energy = null)
+    public ParticleData(double surface, double mass, int rows, int columns, double? energy = null, bool totalSurface = false)
     {
+        int amount = rows * columns;
+        if (totalSurface)
+        {
+            surface /= amount;
+        }
+
         Radius = Math.Sqrt(surface / Math.PI);
         Mass = mass;
         Rows = rows;
         Columns = columns;
-        Energy = energy ?? rows * columns;
+        Energy = energy ?? amount;
     }
 }
 
