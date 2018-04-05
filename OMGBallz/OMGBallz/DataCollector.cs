@@ -1,72 +1,60 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using System.Text;
 
-public static class DataCollector
+public static class DataCollector // TODO: only write average to a file
 {
     static string path = "../../../../Data/";
 
     public static void CollectData(string name, Func<Scene> getScene, int iterations, double timeStep, int threads, int tests)
     {
-        string directory = $"{path}{name}/";
-        Directory.CreateDirectory(directory);
+        var bag = new ConcurrentBag<double[]>();
 
         Parallel.For(0, threads, (thread) =>
         {
             for (int test = 0; test < tests; test++)
             {
-                using (StreamWriter file = new StreamWriter($"{directory}{name}{thread * tests + test}.txt"))
+                Scene scene = getScene();
+
+                World world = scene.World();
+
+                double[] results = new double[iterations];
+
+                double initial = world.Data();
+                for (int iteration = 0; iteration < iterations; iteration++)
                 {
-                    Scene scene = getScene();
-
-                    World world = scene.World();
-
-                    double initial = world.Data();
-                    for (int iteration = 0; iteration < iterations; iteration++)
-                    {
-                        if (iteration != 0)
-                            file.Write(" ");
-
-                        file.Write($"{ world.Data() / initial }");
-
-                        world.Advance(timeStep);
-                    }
+                    double data = world.Data() / initial;
+                    results[iteration] = data;
+                    world.Advance(timeStep);
                 }
+
+                bag.Add(results);
             }
         });
 
-        using (StreamWriter file = new StreamWriter($"{directory}{name}Average.txt"))
+        var average = new double[iterations];
+        for (int i = 0; i < iterations; i++)
         {
-            float[] values = new float[iterations];
-
-            int total = tests * threads;
-
-            for (int test = 0; test < total; test++)
+            foreach(var item in bag)
             {
-                using (StreamReader streamReader = new StreamReader($"{directory}{name}{test}.txt"))
-                {
-                    float[] testValues = streamReader.ReadLine().Split().Select(s => float.Parse(s)).ToArray();
+                average[i] += item[i];
+            }
+            average[i] /= bag.Count;
+        }
 
-                    for(int i = 0; i < testValues.Length; i++)
-                    {
-                        values[i] += testValues[i];
-                    }
-                }
-            }
-            for (int i = 0; i < values.Length; i++)
+        using (StreamWriter file = new StreamWriter($"{path}{name}.txt"))
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            foreach (double value in average)
             {
-                values[i] /= total;
+                stringBuilder.Append($"{value} ");
             }
-            for (int i = 0; i < values.Length; i++)
-            {
-                if (i != 0)
-                    file.Write(" ");
-
-                file.Write($"{values[i]}");
-            }
+            file.Write(stringBuilder.ToString());
         }
     }
 
