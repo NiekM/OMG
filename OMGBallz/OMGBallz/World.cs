@@ -86,7 +86,7 @@ public struct ParticleData
     public int Rows;
     public int Columns;
     public double Energy;
-    
+
     public ParticleData(double surface, double mass, int rows, int columns, double? energy = null, bool totalSurface = false)
     {
         int amount = rows * columns;

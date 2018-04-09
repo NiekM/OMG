@@ -36,25 +36,41 @@ public static class DataCollector // TODO: only write average to a file
                 bag.Add(results);
             }
         });
-
+        
         var average = new double[iterations];
         for (int i = 0; i < iterations; i++)
         {
-            foreach(var item in bag)
+            foreach (var item in bag)
             {
                 average[i] += item[i];
             }
             average[i] /= bag.Count;
         }
 
+        //var variance = new double[iterations];
+        //for (int i = 0; i < iterations; i++)
+        //{
+        //    foreach (var item in bag)
+        //    {
+        //        var difference = item[i] - average[i];
+        //        variance[i] += difference * difference;
+        //    }
+        //    variance[i] /= bag.Count - 1;
+        //}``
+
         using (StreamWriter file = new StreamWriter($"{path}{name}.txt"))
         {
-            StringBuilder stringBuilder = new StringBuilder();
+            file.WriteLine("Average:");
             foreach (double value in average)
             {
-                stringBuilder.Append($"{value} ");
+                file.WriteLine(value);
             }
-            file.Write(stringBuilder.ToString());
+
+            //file.WriteLine("Variance:");
+            //foreach (double value in variance)
+            //{
+            //    file.WriteLine(value);
+            //}
         }
     }
 

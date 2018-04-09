@@ -87,6 +87,10 @@ public class Visualizer : Form
             picture.Translate((drag.Value.X - e.X, drag.Value.Y - e.Y));
             drag = (e.X, e.Y);
         };
+
+
+
+        Size = new Size(620, 640);
     }
 
     public void Render()
